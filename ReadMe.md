@@ -28,7 +28,7 @@ Projede kullanılan paketleri *nuget* kaynağından ekleyin.
 
     docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=yourStrong(!)Password' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-latest
 
-SQL Server'daki kurulumları yapmak için **Managment Studio** ile yeni çalıştırılan örneğe bağlanabilirsiniz. Sunucu: localhost, Kullanıcı adı: sa, Şifre: yourStrong(!)Password olarak kullanın.
+SQL Server'daki kurulumları yapmak için **Managment Studio** ile yeni çalıştırılan örneğe bağlanabilirsiniz. Sunucu: localhost, Kullanıcı adı: **sa**, Şifre: **yourStrong(!)Password** olarak kullanın.
 
 ## SQL Server'da Örnek Tablo ve Verinin Oluşturulması
 Aşağıdaki script ile örnek ortamı oluşturun.
@@ -64,7 +64,7 @@ Aşağıdaki script ile örnek ortamı oluşturun.
     GO
 
 ## Couchbase'de Cluster ve Bucket Oluşturma
-Tarayıcınız ile localhost:8091 adresine gidin. **Setup New Cluster** adımını seçin ve Couchbase'de yeni bir cluster oluşturmak için gerekli adımları uygulayın. Kullanıcı adını Administrator ve şifreyi 111111 olarak ayarlayın. Cluster adı olarak dilediğiniz bir isim seçin. Kullanıcı sözleşmesini kabul ettikten sonra **Finish With Defaults** ile kurulumu tamamlayın.
+Tarayıcınız ile localhost:8091 adresine gidin. **Setup New Cluster** adımını seçin ve Couchbase'de yeni bir cluster oluşturmak için gerekli adımları uygulayın. Kullanıcı adını Administrator ve şifreyi **111111** olarak ayarlayın. Cluster adı olarak dilediğiniz bir isim seçin. Kullanıcı sözleşmesini kabul ettikten sonra **Finish With Defaults** ile kurulumu tamamlayın.
 
 **Buckets** menüsünden **ADD BUCKET** seçeneği ile yeni bir bucket oluşturun. İsim olarak *documents* atayın ve diğer seçenekleri olduğu gibi bırakın.
 
