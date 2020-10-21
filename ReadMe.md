@@ -1,37 +1,37 @@
-# Change Tracking (CT) Kullanarak Sql Server ve Couchbase Arasında Veri Eşitlemek
-Sql Server'da bir tablo üzerindeki Insert, Update, Delete yani DML olayları CDT opsiyonu ile takip edilebilir.
+# Synchronizing changes in SqlServer Table to Couchbase by using Change Tracking (CT)
+In Sql Server, Insert, Update, Delete, ie DML events can be followed up on a table with the CDT option.
 
-SqlServer bu konuda Change Tracking (CT) ve Change Data Capturing (CDC) olmak üzere iki özellik sağlar.
+Sql Server provides two features in this regard: Change Tracking (CT) and Change Data Capturing (CDC).
 
-> Her iki özelliğin [detaylarını](https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/track-data-changes-sql-server?view=sql-server-ver15) incelemelisiniz. Bu proje içindeki kullanım sizin sisteminizin çalışma şekkline uymayabilir ve değişiklikleri doğru bir şekilde aktaramayabilirsiniz.
+> You should review the [details] of both features (https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/track-data-changes-sql-server?view=sql-server-ver15). Usage within this project may not match the way your system works and you may not be able to transfer changes correctly.
 
-## Uyarı
-SQL Server bir talodaki DML değişikliklerinin CT ile doğru takip edilebilmesi için **Snapshot Isolation** kullanmayı yoğun olarak tavsiye eder. [Burayı](https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/work-with-change-tracking-sql-server?view=sql-server-ver15) inceleyiniz. Bu projedeki senaryo için aşağıdaki varsayımlar yapıldı ve **Snapshot Isolation** kullanılmadı.
+## Warning
+SQL Server strongly recommends using ** Snapshot Isolation ** to accurately track DML changes in a tag with CT. Check [here] (https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/work-with-change-tracking-sql-server?view=sql-server-ver15). The following assumptions were made for the scenario in this project and ** Snapshot Isolation ** was not used.
 
-- Değişiklik kayıtları SQL Server tarafından silinmeden önce okunur ve Couchbase'e eşitlenir. *Sql Server'da CHANGE_RETENTION ayarını inceleyin.*
-- Saklanan *cdtLastTrackingVersion* değeri *CHANGE_TRACKING_MIN_VALID_VERSION()* değerinden küçük olmaması sağlanır. Bazı yönetimsel aktiviteler sonucunda *CHANGE_TRACKING_MIN_VALID_VERSION()* değeri Couchbase'de saklanan *cdtLastTrackingVersion* değerinden küçük hale gelebilir. Buna yol açacak yönetimsel aktivitelerden sonra Couchbase'de saklanan *cdtLastTrackingVersion* değeri silinmelidir. SQL Server dokümanlarını inceleyerek buna yol açabilecek aktiviteleri belirleyin.
+- Sql Server regularly deletes change records. Change records are read before deletion and synchronized to Couchbase. *Examine the CHANGE_RETENTION setting in Sql Server.*
+- It is ensured that the stored *cdtLastTrackingVersion* value is not less than the *CHANGE_TRACKING_MIN_VALID_VERSION()* value. As a result of some administrative activities, the *CHANGE_TRACKING_MIN_VALID_VERSION()* value may become less than the *cdtLastTrackingVersion* value stored in Couchbase. The value *cdtLastTrackingVersion* stored in Couchbase should be deleted after any administrative activities that will lead to this. Examine the SQL Server documents and determine the activities that may lead to this.
 
-Aşağıdaki hazırlıklardan sonra uygulama çalışmaya hazır hale gelir. Bu adımları tamamladıktan sonra uygulamayı çalıştırın.
+After the following preparations, the application is ready to work. After completing these steps, run the application.
 
-## Kullanılan Harici Paketler
-Projede kullanılan paketleri *nuget* kaynağından ekleyin.
+## External Packages Used
+Add packages used in the project from *nuget*.
 
     dotnet add package CouchbaseNetClient
     dotnet add package System.Data.SqlClient
     dotnet add Package Dapper
 
-## Bir Couchbase Örneiğini Docker ile Çalıştırma
+## Running a Couchbase Instance with Docker
     docker run -d -p 8091-8094:8091-8094 -p 11210:11210 couchbase
 
-## Bir Sql Server Örneğini Docker ile Çalıştırma
-> Geliştirme ortamınızda çalışan bir SQL sunucu var ise **1433** portu kullanımda olabilir. Çakışma olmaması için geliştirme ortamında çalışan SQL sunucusunu durdurun.
+## Running a Sql Server Instance with Docker
+> If there is a SQL server running in the development environment, the **1433** port may be in use. Stop the SQL server running in the development environment.
 
     docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=yourStrong(!)Password' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2019-latest
 
-SQL Server'daki kurulumları yapmak için **Managment Studio** ile yeni çalıştırılan örneğe bağlanabilirsiniz. Sunucu: localhost, Kullanıcı adı: **sa**, Şifre: **yourStrong(!)Password** olarak kullanın.
+You can connect to the newly run Sql Server instance using **Managment Studio** to make the installations. Server: localhost, Username: **sa**, Password: **yourStrong(!)Password**
 
-## SQL Server'da Örnek Tablo ve Verinin Oluşturulması
-Aşağıdaki script ile örnek ortamı oluşturun.
+## Creating Sample Tables and Data in SQL Server
+Create the sample environment with the script below.
 
     CREATE DATABASE SQLToCouchbaseSample;
     GO
@@ -63,19 +63,19 @@ Aşağıdaki script ile örnek ortamı oluşturun.
     END;
     GO
 
-## Couchbase'de Cluster ve Bucket Oluşturma
-Tarayıcınız ile localhost:8091 adresine gidin. **Setup New Cluster** adımını seçin ve Couchbase'de yeni bir cluster oluşturmak için gerekli adımları uygulayın. Kullanıcı adını Administrator ve şifreyi **111111** olarak ayarlayın. Cluster adı olarak dilediğiniz bir isim seçin. Kullanıcı sözleşmesini kabul ettikten sonra **Finish With Defaults** ile kurulumu tamamlayın.
+## Creating Cluster and Bucket in Couchbase
+Go to localhost: 8091 with your browser. Select the **Setup New Cluster** step and follow the steps to create a new cluster in Couchbase. Set the username as **Administrator** and password as **111111**. Choose a name of your choice as the cluster name. After accepting the user agreement, complete the setup with **Finish With Defaults**.
 
-**Buckets** menüsünden **ADD BUCKET** seçeneği ile yeni bir bucket oluşturun. İsim olarak *documents* atayın ve diğer seçenekleri olduğu gibi bırakın.
+Create a new bucket with the **ADD BUCKET** option from the **Buckets** menu. Assign *documents* as the name and leave the other options as they are.
 
-Bu hazırlıklardan sonra uygulama çalıştırılabilir. Bir terminal açın ve proje kök dizininde aşağıdaki komutu çalıştırın.
+After these preparations, the application can be run. Open a terminal and run the following command in the project root directory.
 
     dotnet run
 
-Eşitleme ile ilgili mesajları gördükten sonra Couchbase panelinden *documents* isimli bucket içindeki dokümanları inceleyebilirsiniz. Couchbase paneline localhost:8091 yolu ile ulaşabiliriniz.
+After seeing the messages about synchronization, you can examine the documents in the bucket named *documents* from the Couchbase panel. You can access the Couchbase panel via localhost:8091.
 
-**Managment Studio** yardımı ile aşağıdaki cümleyi çalıştırın.
+Run the following sentence with the help of **Management Studio**.
 
     UPDATE Product SET ProductName = N'1 numaralı ürünün adı değişti' WHERE ProductId = 1;
 
-Couchbase panelinden *Product-1* isimli dokümanın *ProductName* özelliğine bakın. *1 numaralı ürünün adı değişti* olarak gücellendiğini görün.
+Look at the *ProductName* property of the document *Product-1* from the Couchbase panel. See it updated to *1 numaralı ürünün adı değişti*.

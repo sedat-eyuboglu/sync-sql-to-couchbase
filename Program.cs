@@ -16,7 +16,7 @@ namespace SyncSqlToCb
             
             while(true)
             {
-                Console.WriteLine("Değişiklikler kontrol ediliyor...");
+                Console.WriteLine("Fetching changes...");
                 var cdtLastTrackingVersion = (await collection.ExistsAsync("LastTrackingVersionOfProduct")).Exists ?
                 (await collection.GetAsync("LastTrackingVersionOfProduct")).ContentAs<long>() : default(long);
 
@@ -46,21 +46,21 @@ namespace SyncSqlToCb
                                     ModelYear = reader.GetInt32(reader.GetOrdinal("ModelYear")),
                                     ListPrice = reader.GetDecimal(reader.GetOrdinal("ListPrice"))
                                 });
-                            Console.WriteLine($"Değişen kayıt senkronize edildi: {key}");
+                            Console.WriteLine($"Operation (I/U) was synchronized: {key}");
                         }
                         else if(operation == "D")
                         {
                             if ((await collection.ExistsAsync(key)).Exists)
                             {
                                 await collection.RemoveAsync(key);
-                                Console.WriteLine($"Silinen kayıt senkronize edildi: {key}");
+                                Console.WriteLine($"Operation (D) was synchronized: {key}");
                             }
                         }
                     }
                 }
                 await collection.UpsertAsync<long>($"LastTrackingVersionOfProduct", cdtNextTrackingVersion);
-                Console.WriteLine("Değişiklikler senkronize edildi.");
-                Console.WriteLine("Bekliyor...");
+                Console.WriteLine("Done.");
+                Console.WriteLine("Waiting for next iteration...");
                 System.Threading.Thread.Sleep(15000);
             }
         }
