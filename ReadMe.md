@@ -3,10 +3,10 @@ In Sql Server, Insert, Update, Delete, ie DML events can be followed up on a tab
 
 Sql Server provides two features in this regard: Change Tracking (CT) and Change Data Capturing (CDC).
 
-> You should review the [details] of both features (https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/track-data-changes-sql-server?view=sql-server-ver15). Usage within this project may not match the way your system works and you may not be able to transfer changes correctly.
+> You should review the [details](https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/track-data-changes-sql-server?view=sql-server-ver15) of both features. Usage within this project may not match the way your system works and you may not be able to transfer changes correctly.
 
 ## Warning
-SQL Server strongly recommends using ** Snapshot Isolation ** to accurately track DML changes in a tag with CT. Check [here] (https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/work-with-change-tracking-sql-server?view=sql-server-ver15). The following assumptions were made for the scenario in this project and ** Snapshot Isolation ** was not used.
+SQL Server strongly recommends using **Snapshot Isolation** to accurately track DML changes in a tag with CT. Check [here](https://docs.microsoft.com/en-us/sql/relational-databases/track-changes/work-with-change-tracking-sql-server?view=sql-server-ver15). The following assumptions were made for the scenario in this project and **Snapshot Isolation** was not used.
 
 - Sql Server regularly deletes change records. Change records are read before deletion and synchronized to Couchbase. *Examine the CHANGE_RETENTION setting in Sql Server.*
 - It is ensured that the stored *cdtLastTrackingVersion* value is not less than the *CHANGE_TRACKING_MIN_VALID_VERSION()* value. As a result of some administrative activities, the *CHANGE_TRACKING_MIN_VALID_VERSION()* value may become less than the *cdtLastTrackingVersion* value stored in Couchbase. The value *cdtLastTrackingVersion* stored in Couchbase should be deleted after any administrative activities that will lead to this. Examine the SQL Server documents and determine the activities that may lead to this.
@@ -21,6 +21,7 @@ Add packages used in the project from *nuget*.
     dotnet add Package Dapper
 
 ## Running a Couchbase Instance with Docker
+
     docker run -d -p 8091-8094:8091-8094 -p 11210:11210 couchbase
 
 ## Running a Sql Server Instance with Docker
